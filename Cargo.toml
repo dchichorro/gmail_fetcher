@@ -1,0 +1,19 @@
+[package]
+name = "gmail_fetcher"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1", features = ["full"] } # Async runtime
+reqwest = { version = "0.11", features = ["json", "gzip"] } # HTTP client for API calls
+serde = { version = "1.0", features = ["derive"] } # Serialization/Deserialization
+serde_json = "1.0" # JSON parsing
+oauth2 = { version = "4.0", features = ["reqwest"] } # OAuth2 for Gmail authentication
+anyhow = "1.0" # Error handling
+log = "0.4" # Logging
+env_logger = "0.10" # Logging environment
+tokio-stream = "0.1" # Stream utilities for async
+base64 = "0.13" # Base64 encoding/decoding
+chrono = "0.4"
