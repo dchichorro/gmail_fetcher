@@ -17,3 +17,4 @@ env_logger = "0.10" # Logging environment
 tokio-stream = "0.1" # Stream utilities for async
 base64 = "0.13" # Base64 encoding/decoding
 chrono = "0.4"
+dotenv = "0.15.0"

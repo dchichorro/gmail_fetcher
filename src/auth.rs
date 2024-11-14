@@ -1,10 +1,11 @@
 use oauth2::{basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, RefreshToken, Scope, TokenResponse};
 use oauth2::{ClientId, ClientSecret, RedirectUrl, TokenUrl};
-use crate::constants::{SCOPES, AUTH_URL, CLIENT_ID, CLIENT_SECRET, TOKEN_URL};
-use std::fs;
+use crate::constants::{SCOPES, AUTH_URL, TOKEN_URL};
+use std::{fs, env};
 use serde::{Deserialize, Serialize};
 use anyhow::Result;
 use chrono::Utc;
+use dotenv::dotenv;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Token {
@@ -12,6 +13,17 @@ pub struct Token {
     refresh_token: String,
     expires_at: i64,
 }
+
+pub fn get_client_id() -> String {
+    dotenv().ok();
+    env::var("CLIENT_ID").expect("CLIENT_ID must be set")
+}
+
+pub fn get_client_secret() -> String {
+    dotenv().ok();
+    env::var("CLIENT_SECRET").expect("CLIENT_SECRET must be set")
+}
+
 
 fn load_token() -> Option<Token> {
     let token_data = fs::read_to_string("token.json").ok()?;
@@ -91,8 +103,8 @@ pub async fn get_access_token(client: &BasicClient) -> Result<String> {
 
 pub fn get_oauth_client() -> BasicClient {
     BasicClient::new(
-        ClientId::new(CLIENT_ID.to_string()),
-        Some(ClientSecret::new(CLIENT_SECRET.to_string())),
+        ClientId::new(get_client_id().to_string()),
+        Some(ClientSecret::new(get_client_secret().to_string())),
         AuthUrl::new(AUTH_URL.to_string()).unwrap(),
         Some(TokenUrl::new(TOKEN_URL.to_string()).unwrap()),
     )
