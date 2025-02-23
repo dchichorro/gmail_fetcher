@@ -78,12 +78,11 @@ pub async fn get_access_token(client: &BasicClient) -> Result<String> {
     println!("Enter the authorization code: ");
     let mut code = String::new();
     std::io::stdin().read_line(&mut code)?;
-    let code = code.trim();
-
+    
     let token_response = client
         .exchange_code(AuthorizationCode::new(code.to_string()))
         .request_async(async_http_client)
-        .await?;
+        .await.unwrap();
 
     let new_token = Token {
         access_token: token_response.access_token().secret().to_string(),

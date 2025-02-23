@@ -87,6 +87,10 @@ pub async fn download_attachment(
         // Extract attachments from the root payload
         let attachments = extract_attachments(&email["payload"]);
 
+        // create output_dir if it doesn't exist
+        if !Path::new(output_dir).exists() {
+            std::fs::create_dir(output_dir)?;
+        }
         for (filename, attachment_id) in attachments {
             let file_path = format!("{}/{}", output_dir, filename);
             if Path::new(&file_path).exists() {
