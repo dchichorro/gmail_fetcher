@@ -1,0 +1,9 @@
+# Gmail Fetcher Filters
+#
+# Each filter defines a Gmail search query and optional parsing rules.
+# The fetcher runs all filters on each poll cycle, tagging attachments
+# with the filter name for downstream processing.
+
+[[filters]]
+name = "continente"
+gmail_query = "from:noreply@cartaocontinente.pt has:attachment"

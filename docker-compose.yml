@@ -1,0 +1,23 @@
+services:
+  gmail-fetcher:
+    build: .
+    container_name: gmail_fetcher
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - RUST_LOG=info
+      - FILTERS_CONFIG=/app/filters.toml
+      - POLL_INTERVAL=${POLL_INTERVAL:-60}
+      - OUTPUT_DIR=/app/attachments
+      - TOKEN_FILE=/app/data/token.json
+      - DB_PATH=/app/data/gmail_fetcher.db
+    volumes:
+      - ./filters.toml:/app/filters.toml:ro
+      - ./attachments:/app/attachments
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /app/data/gmail_fetcher.db && find /app/data/gmail_fetcher.db -mmin -2 -print -quit | grep -q ."]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
