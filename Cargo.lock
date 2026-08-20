@@ -592,6 +592,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "shared_db",
  "tokio",
  "tokio-stream",
  "toml",
@@ -1658,6 +1659,16 @@ dependencies = [
  "cfg-if",
  "cpufeatures 0.2.17",
  "digest",
+]
+
+[[package]]
+name = "shared_db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "log",
+ "rusqlite",
 ]
 
 [[package]]

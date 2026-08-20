@@ -23,3 +23,4 @@ dotenvy = "0.15"
 clap = { version = "4", features = ["env", "derive"] }
 rusqlite = { version = "0.31", features = ["bundled"] }
 toml = "0.8"
+shared_db = { path = "../shared-db" }
