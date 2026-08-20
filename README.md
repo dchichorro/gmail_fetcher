@@ -7,9 +7,7 @@ Polls Gmail for emails with attachments using configurable filters. Downloads an
 ```bash
 # 1. Copy and edit config
 cp .env.example .env
-cp filters.toml.example filters.toml
 # Edit .env with your Google OAuth2 credentials
-# Edit filters.toml with your Gmail search queries
 
 # 2. Run locally
 cargo run --release
@@ -34,15 +32,13 @@ gmail_query = "from:noreply@repsol.pt has:attachment"
 
 Each filter runs its own Gmail query. Attachments are tagged with the filter name for downstream processing.
 
+Filters are validated at startup — empty names or queries cause an immediate error.
+
 ## CLI
 
 ```
-gmail_fetcher poll          # Poll Gmail and fetch attachments (default)
-gmail_fetcher summary       # Show receipt summary
-gmail_fetcher summary --filter continente  # Summary for one filter
-gmail_fetcher filters       # List configured filters
-gmail_fetcher chart         # Generate spending chart
-gmail_fetcher chart --filter continente --output ./chart.jpg
+gmail_fetcher poll       # Poll Gmail and fetch attachments (default)
+gmail_fetcher filters    # List configured filters
 ```
 
 ## Architecture
@@ -50,18 +46,18 @@ gmail_fetcher chart --filter continente --output ./chart.jpg
 ```
 ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
 │   Gmail     │────▶│ gmail-fetcher│────▶│  SQLite DB   │
-│   Push/Poll │     │  (this app)  │     │ attachments  │
+│   (Poll)    │     │  (this app)  │     │ attachments  │
 └─────────────┘     └──────────────┘     └──────┬───────┘
-                                                 │
-                                          ┌──────▼───────┐
-                                          │ receipt-     │
-                                          │ parser       │
-                                          │ (separate)   │
-                                          └──────────────┘
+                                                │
+                                         ┌──────▼───────┐
+                                         │ receipt-     │
+                                         │ parser       │
+                                         │ (separate)   │
+                                         └──────────────┘
 ```
 
-- **gmail-fetcher**: Fetches emails + attachments, stores metadata. Triggered by Gmail Push or polling.
-- **receipt-parser**: Separate service that parses PDFs by configurable rules. Runs on schedule or triggered.
+- **gmail-fetcher**: Fetches emails + attachments via polling. Stores metadata in SQLite, files on disk organized by `YYYY/MM/DD/<email_id>/`.
+- **receipt-parser**: Separate service that parses PDFs by configurable rules. Owns all receipt/invoice parsing logic.
 
 ## OAuth2 Setup
 
@@ -69,8 +65,10 @@ gmail_fetcher chart --filter continente --output ./chart.jpg
 2. Create OAuth2 credentials (Desktop app)
 3. Enable Gmail API
 4. Set `CLIENT_ID` and `CLIENT_SECRET` in `.env`
-5. Run the app — it will print an auth URL on first run
-6. Paste the authorization code when prompted
+5. Run `python3 auth_helper.py` locally to authorize
+6. Copy the generated `token.json` to the server
+
+The daemon handles token refresh automatically. If the refresh token expires, it enters backoff mode and logs a re-auth instruction.
 
 ## Environment Variables
 
@@ -83,4 +81,34 @@ gmail_fetcher chart --filter continente --output ./chart.jpg
 | `OUTPUT_DIR` | `./attachments` | Where to save files |
 | `TOKEN_FILE` | `./token.json` | OAuth2 token storage |
 | `DB_PATH` | `./data/gmail_fetcher.db` | SQLite database path |
-| `RUST_LOG` | `info` | Log level |
+| `RUST_LOG` | `info` | Log level (`info` or `debug`) |
+
+## Development
+
+```bash
+# Build
+cargo build --release
+
+# Run tests (21 tests: unit + integration)
+cargo test
+
+# Lint
+cargo clippy --all-targets
+```
+
+### Project Structure
+
+```
+src/
+  lib.rs          # Library crate (public API for integration tests)
+  main.rs         # Binary entry point, CLI, poll loop
+  filters.rs      # Filter config loading and validation
+  db.rs           # SQLite schema, migrations, queries
+  gmail.rs        # Gmail API client, attachment downloads
+  auth.rs         # OAuth2 token management
+  constants.rs    # API URLs
+
+tests/
+  filters_test.rs           # Filter validation integration tests
+  attachment_path_test.rs   # Attachment path + write cycle tests
+```
